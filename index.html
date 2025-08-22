@@ -394,251 +394,385 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- No GTM / GA code included on purpose -->
   <script>
-    // ---------- Utilities ----------
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-    const format = n => `$${n.toFixed(2)}`;
-    const state = {
-      cart: [], // {id,name,price,qty}
-      products: [
-        {id:"vanilla", name:"Vanilla Bean", price:3.50, emoji:"🧁", badge:"Best Seller"},
-        {id:"choc", name:"Chocolate Fudge", price:3.80, emoji:"🍫"},
-        {id:"red", name:"Red Velvet", price:3.80, emoji:"❤️"},
-        {id:"salt", name:"Salted Caramel", price:3.90, emoji:"🧂"},
-        {id:"lemon", name:"Lemon Zest", price:3.60, emoji:"🍋"},
-        {id:"pb", name:"Peanut Butter", price:3.90, emoji:"🥜"},
-      ],
-    };
+   
+  /* =====================
+     0) DATAlayer helpers
+     ===================== */
+  window.dataLayer = window.dataLayer || [];
+  function dl(event, props = {}) {
+    const payload = Object.assign({ event }, props);
+    dataLayer.push(payload);
+    // dev aid
+    console.log('dataLayer →', payload);
+  }
+  // Build GA4 items array from current cart
+  function ga4ItemsFromCart() {
+    return state.cart.map((it, idx) => ({
+      item_id: it.id,
+      item_name: it.name,
+      item_category: 'Cupcake',
+      price: it.price,
+      quantity: it.qty,
+      index: idx + 1
+    }));
+  }
 
-    function save(){ localStorage.setItem('cupcake-cart', JSON.stringify(state.cart)); }
-    function load(){ try{ state.cart = JSON.parse(localStorage.getItem('cupcake-cart')||'[]'); }catch(e){ state.cart = []; } }
+  /* =====================
+     1) ORIGINAL CODE (kept)
+     ===================== */
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+  const format = n => `$${n.toFixed(2)}`;
+  const state = {
+    cart: [], // {id,name,price,qty}
+    products: [
+      {id:"vanilla", name:"Vanilla Bean", price:3.50, emoji:"🧁", badge:"Best Seller"},
+      {id:"choc", name:"Chocolate Fudge", price:3.80, emoji:"🍫"},
+      {id:"red", name:"Red Velvet", price:3.80, emoji:"❤️"},
+      {id:"salt", name:"Salted Caramel", price:3.90, emoji:"🧂"},
+      {id:"lemon", name:"Lemon Zest", price:3.60, emoji:"🍋"},
+      {id:"pb", name:"Peanut Butter", price:3.90, emoji:"🥜"},
+    ],
+  };
+  function save(){ localStorage.setItem('cupcake-cart', JSON.stringify(state.cart)); }
+  function load(){ try{ state.cart = JSON.parse(localStorage.getItem('cupcake-cart')||'[]'); }catch(e){ state.cart = []; } }
 
-    // ---------- Render products ----------
-    function renderProducts(){
-      const grid = $('#productGrid');
-      grid.innerHTML = '';
-      for(const p of state.products){
-        const card = document.createElement('div');
-        card.className = 'card p24 product';
-        card.setAttribute('data-sku', p.id);
-        card.setAttribute('data-name', p.name);
-        card.setAttribute('data-category', 'Cupcake');
-        card.setAttribute('data-price', p.price);
-        card.innerHTML = `
-          <span class="badge pill">${p.badge || 'Cupcake'}</span>
-          <div class="img">${p.emoji}</div>
-          <h3 style="margin:10px 0 0">${p.name}</h3>
-          <div class="muted">Classic ${p.name.toLowerCase()} cupcake.</div>
-          <div class="row" style="justify-content:space-between;margin-top:10px">
-            <span class="price">${format(p.price)}</span>
-            <button class="btn btn-primary addToCart" data-action="add-to-cart">Add to cart</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      }
+  function renderProducts(){
+    const grid = $('#productGrid');
+    grid.innerHTML = '';
+    for(const p of state.products){
+      const card = document.createElement('div');
+      card.className = 'card p24 product';
+      card.setAttribute('data-sku', p.id);
+      card.setAttribute('data-name', p.name);
+      card.setAttribute('data-category', 'Cupcake');
+      card.setAttribute('data-price', p.price);
+      card.innerHTML = `
+        <span class="badge pill">${p.badge || 'Cupcake'}</span>
+        <div class="img">${p.emoji}</div>
+        <h3 style="margin:10px 0 0">${p.name}</h3>
+        <div class="muted">Classic ${p.name.toLowerCase()} cupcake.</div>
+        <div class="row" style="justify-content:space-between;margin-top:10px">
+          <span class="price">${format(p.price)}</span>
+          <button class="btn btn-primary addToCart" data-action="add-to-cart">Add to cart</button>
+        </div>
+      `;
+      grid.appendChild(card);
     }
+  }
 
-    // ---------- Search (site search param q) ----------
-    function applySearchFromURL(){
-      const params = new URLSearchParams(location.search);
-      const q = params.get('q');
-      if(!q) return;
-      $('#q').value = q;
-      const cards = $$('#productGrid .product');
-      for(const c of cards){
-        const name = c.getAttribute('data-name').toLowerCase();
-        c.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
-      }
+  function applySearchFromURL(){
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if(!q) return;
+    $('#q').value = q;
+    const cards = $$('#productGrid .product');
+    for(const c of cards){
+      const name = c.getAttribute('data-name').toLowerCase();
+      c.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
     }
+  }
 
-    // ---------- Cart ----------
-    function addToCart(id, qty=1){
-      const p = state.products.find(x=>x.id===id);
-      if(!p) return;
-      const found = state.cart.find(x=>x.id===id);
-      if(found) found.qty += qty; else state.cart.push({id:p.id,name:p.name,price:p.price,qty});
+  // ----- Cart core -----
+  function addToCart(id, qty=1){
+    const p = state.products.find(x=>x.id===id);
+    if(!p) return;
+    const found = state.cart.find(x=>x.id===id);
+    if(found) found.qty += qty; else state.cart.push({id:p.id,name:p.name,price:p.price,qty});
+    updateCartUI(); save();
+
+    // DL: add_to_cart (GA4 ecommerce)
+    dl('add_to_cart', {
+      currency: 'AUD',
+      value: p.price * qty,
+      items: [{ item_id: p.id, item_name: p.name, item_category: 'Cupcake', price: p.price, quantity: qty }]
+    });
+  }
+  function removeFromCart(id){
+    const removed = state.cart.find(x=>x.id===id);
+    state.cart = state.cart.filter(x=>x.id!==id);
+    updateCartUI(); save();
+    if(removed){
+      dl('remove_from_cart', {
+        currency: 'AUD',
+        value: removed.price * removed.qty,
+        items: [{ item_id: removed.id, item_name: removed.name, item_category: 'Cupcake', price: removed.price, quantity: removed.qty }]
+      });
+    }
+  }
+  function setQty(id, qty){
+    const item = state.cart.find(x=>x.id===id);
+    if(item){
+      const old = item.qty;
+      item.qty = Math.max(1, qty|0);
       updateCartUI(); save();
-    }
-    function removeFromCart(id){ state.cart = state.cart.filter(x=>x.id!==id); updateCartUI(); save(); }
-    function setQty(id, qty){ const item = state.cart.find(x=>x.id===id); if(item){ item.qty = Math.max(1, qty|0); updateCartUI(); save(); } }
-    function cartTotal(){ return state.cart.reduce((s,x)=>s+x.price*x.qty,0); }
-
-    function updateCartUI(){
-      $('#cartCount').textContent = state.cart.reduce((s,x)=>s+x.qty,0);
-      const list = $('#cartItems');
-      list.innerHTML = '';
-      if(state.cart.length===0){ list.innerHTML = '<p class="muted">Your cart is empty.</p>'; }
-      for(const item of state.cart){
-        const row = document.createElement('div');
-        row.className = 'card p24';
-        row.setAttribute('data-sku', item.id);
-        row.innerHTML = `
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <div><strong>${item.name}</strong> <span class="muted">· ${format(item.price)}</span></div>
-            <div class="row">
-              <label class="sr-only" for="qty-${item.id}">Qty</label>
-              <input id="qty-${item.id}" type="number" min="1" value="${item.qty}" style="width:70px" data-action="qty-change" />
-              <button class="btn btn-ghost" data-action="remove-item">Remove</button>
-            </div>
-          </div>`;
-        list.appendChild(row);
+      // DL: update qty (use add/remove to reflect delta)
+      const diff = item.qty - old;
+      if(diff !== 0){
+        const evt = diff > 0 ? 'add_to_cart' : 'remove_from_cart';
+        dl(evt, {
+          currency: 'AUD',
+          value: item.price * Math.abs(diff),
+          items: [{ item_id: item.id, item_name: item.name, item_category: 'Cupcake', price: item.price, quantity: Math.abs(diff) }]
+        });
       }
-      $('#cartTotal').textContent = format(cartTotal());
-      renderReviewTable();
     }
+  }
+  function cartTotal(){ return state.cart.reduce((s,x)=>s+x.price*x.qty,0); }
 
-    // ---------- Build-a-Box ----------
-    function renderBoxOptions(){
-      const form = $('#boxForm');
-      form.innerHTML = '';
-      for(const p of state.products){
-        const id = 'box-' + p.id;
-        const wrap = document.createElement('label');
-        wrap.className = 'card p24 row';
-        wrap.innerHTML = `
-          <input type="checkbox" id="${id}" name="box" value="${p.id}" data-name="${p.name}" data-price="${p.price}" />
-          <span style="flex:1 1 auto">${p.emoji} ${p.name}</span>
-          <span class="muted">${format(p.price)}</span>
-        `;
-        form.appendChild(wrap);
-      }
-      updateBoxHint();
+  function updateCartUI(){
+    $('#cartCount').textContent = state.cart.reduce((s,x)=>s+x.qty,0);
+    const list = $('#cartItems');
+    list.innerHTML = '';
+    if(state.cart.length===0){ list.innerHTML = '<p class="muted">Your cart is empty.</p>'; }
+    for(const item of state.cart){
+      const row = document.createElement('div');
+      row.className = 'card p24';
+      row.setAttribute('data-sku', item.id);
+      row.innerHTML = `
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><strong>${item.name}</strong> <span class="muted">· ${format(item.price)}</span></div>
+          <div class="row">
+            <label class="sr-only" for="qty-${item.id}">Qty</label>
+            <input id="qty-${item.id}" type="number" min="1" value="${item.qty}" style="width:70px" data-action="qty-change" />
+            <button class="btn btn-ghost" data-action="remove-item">Remove</button>
+          </div>
+        </div>`;
+      list.appendChild(row);
     }
-    function updateBoxHint(){
+    $('#cartTotal').textContent = format(cartTotal());
+    renderReviewTable();
+  }
+
+  // ----- Build-a-Box -----
+  function renderBoxOptions(){
+    const form = $('#boxForm');
+    form.innerHTML = '';
+    for(const p of state.products){
+      const id = 'box-' + p.id;
+      const wrap = document.createElement('label');
+      wrap.className = 'card p24 row';
+      wrap.innerHTML = `
+        <input type="checkbox" id="${id}" name="box" value="${p.id}" data-name="${p.name}" data-price="${p.price}" />
+        <span style="flex:1 1 auto">${p.emoji} ${p.name}</span>
+        <span class="muted">${format(p.price)}</span>
+      `;
+      form.appendChild(wrap);
+    }
+    updateBoxHint();
+  }
+  function updateBoxHint(){
+    const sel = $$('#boxForm input[type="checkbox"]:checked');
+    $('#boxHint').textContent = `${sel.length}/6 selected`;
+  }
+
+  function renderReviewTable(){
+    const t = $('#reviewTable');
+    t.innerHTML = '';
+    if(state.cart.length===0){ t.innerHTML = '<tr><td class="muted">No items</td></tr>'; return; }
+    const head = document.createElement('tr');
+    head.innerHTML = '<th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th>';
+    t.appendChild(head);
+    for(const it of state.cart){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${it.name}</td><td>${it.qty}</td><td>${format(it.price)}</td><td>${format(it.price*it.qty)}</td>`;
+      t.appendChild(tr);
+    }
+    const total = document.createElement('tr');
+    total.innerHTML = `<td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>${format(cartTotal())}</strong></td>`;
+    t.appendChild(total);
+  }
+
+  // ----- Checkout flow -----
+  function openCheckout(){
+    const dlg = $('#checkoutModal');
+    if(typeof dlg.showModal === 'function'){ dlg.showModal(); } else { dlg.setAttribute('open',''); }
+    goStep(1);
+    history.pushState({step:1}, '', '#checkout-step-1');
+
+    // DL: begin_checkout
+    dl('begin_checkout', { currency: 'AUD', value: cartTotal(), items: ga4ItemsFromCart() });
+  }
+  function goStep(n){
+    $('#step1').hidden = n!==1; $('#step2').hidden = n!==2; $('#step3').hidden = n!==3;
+    $('#step1Tag').style.background = n===1 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+    $('#step2Tag').style.background = n===2 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+    $('#step3Tag').style.background = n===3 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+  }
+
+  function bind(){
+    // Nav to sections (no-op; history handled elsewhere)
+    $$('.navlinks a[href^="#"]').forEach(a=>a.addEventListener('click', e=>{}));
+
+    // Search form (GET q=)
+    $('#siteSearch').addEventListener('submit', ()=>{
+      const q = $('#q').value || '';
+      dl('view_search_results', { search_term: q });
+      // GA4 enhanced measurement may also track site_search; this is explicit.
+    });
+
+    // Products clicks → addToCart + DL happens inside addToCart()
+    $('#productGrid').addEventListener('click', e=>{
+      const btn = e.target.closest('.addToCart');
+      if(!btn) return;
+      const card = e.target.closest('.product');
+      addToCart(card.getAttribute('data-sku'));
+    });
+
+    // Build-a-Box selections
+    $('#boxForm').addEventListener('change', updateBoxHint);
+    $('#addBox').addEventListener('click', ()=>{
       const sel = $$('#boxForm input[type="checkbox"]:checked');
-      $('#boxHint').textContent = `${sel.length}/6 selected`;
-    }
-
-    // ---------- Review Table ----------
-    function renderReviewTable(){
-      const t = $('#reviewTable');
-      t.innerHTML = '';
-      if(state.cart.length===0){ t.innerHTML = '<tr><td class="muted">No items</td></tr>'; return; }
-      const head = document.createElement('tr');
-      head.innerHTML = '<th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th>';
-      t.appendChild(head);
-      for(const it of state.cart){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${it.name}</td><td>${it.qty}</td><td>${format(it.price)}</td><td>${format(it.price*it.qty)}</td>`;
-        t.appendChild(tr);
+      sel.forEach(chk=> addToCart(chk.value));
+      if(sel.length){
+        dl('add_to_cart_box', { count: sel.length });
       }
-      const total = document.createElement('tr');
-      total.innerHTML = `<td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>${format(cartTotal())}</strong></td>`;
-      t.appendChild(total);
-    }
+    });
+    $('#resetBox').addEventListener('click', ()=>{
+      $$('#boxForm input[type="checkbox"]').forEach(c=>c.checked=false); updateBoxHint();
+      dl('box_reset');
+    });
 
-    // ---------- Checkout flow (with history changes) ----------
-    function openCheckout(){
+    // Cart drawer open/close
+    $('#openCart').addEventListener('click', ()=>{
+      $('#cartDrawer').classList.add('show');
+      dl('view_cart', { currency: 'AUD', value: cartTotal(), items: ga4ItemsFromCart() });
+    });
+    $('#closeCart').addEventListener('click', ()=>{
+      $('#cartDrawer').classList.remove('show');
+      dl('close_cart_drawer');
+    });
+
+    // Cart item remove / qty change (DL handled inside removeFromCart/setQty)
+    $('#cartItems').addEventListener('click', e=>{
+      const row = e.target.closest('.card'); if(!row) return;
+      if(e.target.matches('[data-action="remove-item"]')) removeFromCart(row.getAttribute('data-sku'));
+    });
+    $('#cartItems').addEventListener('change', e=>{
+      if(e.target.matches('[data-action="qty-change"]')){
+        const row = e.target.closest('.card'); setQty(row.getAttribute('data-sku'), +e.target.value);
+      }
+    });
+
+    // Checkout modal steps
+    $('#checkout').addEventListener('click', openCheckout);
+    $('#toPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); dl('checkout_progress', { step: 2 }); });
+    $('#backToShipping').addEventListener('click', e=>{ e.preventDefault(); goStep(1); history.pushState({step:1}, '', '#checkout-step-1'); dl('checkout_progress', { step: 1 }); });
+    $('#toReview').addEventListener('click', e=>{ e.preventDefault(); goStep(3); history.pushState({step:3}, '', '#checkout-step-3'); dl('checkout_progress', { step: 3 }); });
+    $('#backToPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); dl('checkout_progress', { step: 2 }); });
+    $('#placeOrder').addEventListener('click', e=>{
+      e.preventDefault();
+      // Fake order success
+      const value = cartTotal();
+      const items = ga4ItemsFromCart();
+      const txnId = 'TX-' + Math.random().toString(36).slice(2,10).toUpperCase();
+
+      dl('purchase', { transaction_id: txnId, currency: 'AUD', value, items });
+
+      state.cart = []; save(); updateCartUI();
       const dlg = $('#checkoutModal');
-      if(typeof dlg.showModal === 'function'){ dlg.showModal(); } else { dlg.setAttribute('open',''); }
-      goStep(1);
-      history.pushState({step:1}, '', '#checkout-step-1');
-    }
-    function goStep(n){
-      $('#step1').hidden = n!==1; $('#step2').hidden = n!==2; $('#step3').hidden = n!==3;
-      $('#step1Tag').style.background = n===1 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
-      $('#step2Tag').style.background = n===2 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
-      $('#step3Tag').style.background = n===3 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
-    }
+      if(typeof dlg.close === 'function'){ dlg.close(); } else { dlg.removeAttribute('open'); }
+      alert('Order placed! (Demo)');
+      history.pushState({step:4}, '', '#order-success');
+    });
 
-    // ---------- Event binding ----------
-    function bind(){
-      // Nav to sections
-      $$('.navlinks a[href^="#"]').forEach(a=>a.addEventListener('click', e=>{
-        // History change trigger can detect this
-      }));
+    // Cookie banner
+    $('#acceptCookies').addEventListener('click', ()=> { $('#cookie').remove(); dl('consent_accept'); });
+    $('#declineCookies').addEventListener('click', ()=> { $('#cookie').remove(); dl('consent_decline'); });
 
-      // Search form (GET q=)
-      $('#siteSearch').addEventListener('submit', ()=>{/* default navigate to ?q=... */});
+    // Custom link (not an <a>)
+    $('#customLink').addEventListener('click', ()=> { alert('Custom link clicked'); dl('custom_link_click', { id: 'customLink' }); });
 
-      // Products
-      $('#productGrid').addEventListener('click', e=>{
-        const btn = e.target.closest('.addToCart');
-        if(!btn) return;
-        const card = e.target.closest('.product');
-        addToCart(card.getAttribute('data-sku'));
-      });
+    // JS Error button + global error listener
+    $('#throwError').addEventListener('click', ()=>{ nonexistentFunction(); });
+    window.addEventListener('error', (e)=>{
+      dl('js_error', { message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno });
+    });
 
-      // Build-a-Box selections
-      $('#boxForm').addEventListener('change', updateBoxHint);
-      $('#addBox').addEventListener('click', ()=>{
-        const sel = $$('#boxForm input[type="checkbox"]:checked');
-        sel.forEach(chk=> addToCart(chk.value));
-      });
-      $('#resetBox').addEventListener('click', ()=>{
-        $$('#boxForm input[type="checkbox"]').forEach(c=>c.checked=false); updateBoxHint();
-      });
+    // Clear cart
+    $('#clearCart').addEventListener('click', ()=>{ state.cart = []; save(); updateCartUI(); dl('clear_cart'); });
 
-      // Cart drawer
-      $('#openCart').addEventListener('click', ()=>$('#cartDrawer').classList.add('show'));
-      $('#closeCart').addEventListener('click', ()=>$('#cartDrawer').classList.remove('show'));
-      $('#cartItems').addEventListener('click', e=>{
-        const row = e.target.closest('.card'); if(!row) return;
-        if(e.target.matches('[data-action="remove-item"]')) removeFromCart(row.getAttribute('data-sku'));
-      });
-      $('#cartItems').addEventListener('change', e=>{
-        if(e.target.matches('[data-action="qty-change"]')){
-          const row = e.target.closest('.card'); setQty(row.getAttribute('data-sku'), +e.target.value);
+    // Close cart when clicking backdrop
+    document.addEventListener('click', (e)=>{ if(e.target.id==='cartDrawer') { $('#cartDrawer').classList.remove('show'); dl('close_cart_drawer'); } });
+
+    // Hash-based router (History Change trigger mirror)
+    window.addEventListener('hashchange', ()=>{ dl('route_change', { hash: location.hash }); });
+  }
+
+  // ----- Element Visibility (banners, map section) -----
+  function trackVisibility() {
+    const targets = [
+      { sel: '#freeShipBanner', name: 'free_ship_banner' },
+      { sel: '#promoBanner',    name: 'hero_promo_banner' },
+      { sel: '#menuBanner',     name: 'menu_banner' },
+      { sel: '#mapBanner',      name: 'map_banner' }
+    ];
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          dl('element_visible', { element: entry.target.id || entry.target.getAttribute('data-action') || 'unknown', percent_visible: Math.round(entry.intersectionRatio*100) });
+          // Fire only once per element
+          io.unobserve(entry.target);
         }
       });
+    }, { threshold: [0.5] }); // ~50% visible
+    targets.forEach(t=>{
+      const el = $(t.sel);
+      if(el) io.observe(el);
+    });
+  }
 
-      // Checkout modal
-      $('#checkout').addEventListener('click', openCheckout);
-      $('#toPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); });
-      $('#backToShipping').addEventListener('click', e=>{ e.preventDefault(); goStep(1); history.pushState({step:1}, '', '#checkout-step-1'); });
-      $('#toReview').addEventListener('click', e=>{ e.preventDefault(); goStep(3); history.pushState({step:3}, '', '#checkout-step-3'); });
-      $('#backToPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); });
-      $('#placeOrder').addEventListener('click', e=>{
-        e.preventDefault();
-        // Fake order success
-        state.cart = []; save(); updateCartUI();
-        const dlg = $('#checkoutModal');
-        if(typeof dlg.close === 'function'){ dlg.close(); } else { dlg.removeAttribute('open'); }
-        alert('Order placed! (Demo)');
-        history.pushState({step:4}, '', '#order-success');
+  // ----- YouTube video tracking -----
+  function setupYouTubeDL(){
+    const iframe = $('#ytVideo');
+    if(!iframe) return;
+    // Load API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+    // player ready callback
+    window.onYouTubeIframeAPIReady = function(){
+      const player = new YT.Player('ytVideo', {
+        events: {
+          onStateChange: function(ev){
+            const title = iframe.getAttribute('title') || 'Video';
+            // Extract ID from src
+            const src = iframe.getAttribute('src') || '';
+            const idMatch = src.match(/embed\/([^?]+)/);
+            const vid = idMatch ? idMatch[1] : '';
+            if(ev.data === YT.PlayerState.PLAYING) dl('video_play',   { video_title: title, video_id: vid });
+            if(ev.data === YT.PlayerState.PAUSED)  dl('video_pause',  { video_title: title, video_id: vid });
+            if(ev.data === YT.PlayerState.ENDED)   dl('video_complete',{ video_title: title, video_id: vid });
+          }
+        }
       });
+    };
+  }
 
-      // Cookie banner
-      $('#acceptCookies').addEventListener('click', ()=> $('#cookie').remove());
-      $('#declineCookies').addEventListener('click', ()=> $('#cookie').remove());
+  // ---------- Init ----------
+  function init(){
+    $('#year').textContent = new Date().getFullYear();
+    load();
+    renderProducts();
+    renderBoxOptions();
+    updateCartUI();
+    applySearchFromURL();
+    bind();
+    trackVisibility();
+    setupYouTubeDL();
 
-      // Custom link (not an <a>)
-      $('#customLink').addEventListener('click', ()=> alert('Custom link clicked'));
+    // If the page loads with a specific #checkout-step-x, open modal
+    if(location.hash.startsWith('#checkout-step')) openCheckout();
+
+    // Basic page_view-like marker (optional; GA4 config usually handles page_view)
+    dl('page_loaded', { page_location: location.href, page_path: location.pathname, page_title: document.title });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+
 
       // JS Error button
-      $('#throwError').addEventListener('click', ()=>{
-        // Intentionally throw to test GTM JavaScript Error trigger
-        nonexistentFunction();
-      });
-
-      // Clear cart (for repeated testing)
-      $('#clearCart').addEventListener('click', ()=>{ state.cart = []; save(); updateCartUI(); });
-
-      // Open cart via keyboard shortcut (for fun): press "c"
-      document.addEventListener('keydown', (e)=>{ if(e.key==='c') $('#cartDrawer').classList.add('show'); });
-
-      // Close cart when clicking outside
-      document.addEventListener('click', (e)=>{ if(e.target.id==='cartDrawer') $('#cartDrawer').classList.remove('show'); });
-
-      // Hash-based router (History Change trigger)
-      window.addEventListener('hashchange', ()=>{/* GTM can listen via History Change trigger */});
-    }
-
-    // ---------- Init ----------
-    function init(){
-      $('#year').textContent = new Date().getFullYear();
-      load();
-      renderProducts();
-      renderBoxOptions();
-      updateCartUI();
-      applySearchFromURL();
-      bind();
-      // If the page loads with a specific #checkout-step-x, open modal
-      if(location.hash.startsWith('#checkout-step')) openCheckout();
-    }
-
-    document.addEventListener('DOMContentLoaded', init);
-  </script>
+     
 </body>
   
   <!-- ===========================
