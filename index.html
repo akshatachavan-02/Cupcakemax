@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cupcake Co · Demo Site for GTM & GA4 Practice</title>
+  <meta name="description" content="A tiny cupcake shop website packed with interactive elements to practice GTM and GA4 tracking." />
+  <style>
+    :root{
+      --bg:#0f172a;         /* slate-900 */
+      --card:#111827;       /* gray-900 */
+      --muted:#94a3b8;      /* slate-400 */
+      --text:#e5e7eb;       /* gray-200 */
+      --brand:#f59e0b;      /* amber-500 */
+      --accent:#22c55e;     /* green-500 */
+      --danger:#ef4444;     /* red-500 */
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text)}
+    a{color:var(--brand);text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{position:sticky;top:0;background:rgba(15,23,42,.9);backdrop-filter: blur(8px);border-bottom:1px solid rgba(148,163,184,.2);z-index:40}
+    .container{max-width:1050px;margin:auto;padding:0 20px}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800}
+    .brand .logo{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#f59e0b); display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow)}
+    .brand .logo span{font-size:20px}
+    .navlinks{display:flex;gap:14px;flex-wrap:wrap}
+    .navlinks a{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid rgba(148,163,184,.15)}
+    .nav-ctas{display:flex;align-items:center;gap:12px}
+    .btn{display:inline-block;border:none;cursor:pointer;padding:10px 14px;border-radius:999px;font-weight:700}
+    .btn-primary{background:var(--brand); color:#1f2937}
+    .btn-ghost{background:rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(148,163,184,.2)}
+    .pill{font-size:12px;padding:5px 10px;border-radius:999px;background:rgba(34,197,94,.2);color:#dcfce7;border:1px solid rgba(34,197,94,.35)}
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;padding:36px 0 18px}
+    .card{background:var(--card);border:1px solid rgba(148,163,184,.12);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .p24{padding:24px}
+    .muted{color:var(--muted)}
+    .grid{display:grid;gap:16px}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .product{position:relative;overflow:hidden}
+    .product .img{height:150px;border-radius:12px;background:linear-gradient(135deg,#1f2937,#111827);display:flex;align-items:center;justify-content:center;font-size:44px}
+    .price{font-weight:800}
+    .badge{position:absolute;top:10px;left:10px}
+    section{padding:28px 0}
+    .footer{padding:40px 0;border-top:1px solid rgba(148,163,184,.2);color:var(--muted)}
+    .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .field{display:grid;gap:6px}
+    input, select, textarea{background:#0b1220;color:var(--text);border:1px solid rgba(148,163,184,.25);border-radius:10px;padding:10px}
+    label{font-size:14px;color:#cbd5e1}
+    .stack{display:grid;gap:10px}
+    .stack-lg{gap:16px}
+    .stack-xl{gap:24px}
+    .banner{position:relative;overflow:hidden}
+    .banner::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 200px at 80% -10%, rgba(245,158,11,.25), transparent), radial-gradient(400px 150px at -10% 80%, rgba(34,197,94,.15), transparent)}
+    .cart-bubble{background:#111827;border:1px solid rgba(148,163,184,.25);padding:6px 10px;border-radius:999px}
+    .cart-count{font-weight:800}
+    .drawer{position:fixed;right:-420px;top:0;height:100vh;width:420px;background:var(--card);border-left:1px solid rgba(148,163,184,.2);transition:right .35s ease;z-index:60;display:flex;flex-direction:column}
+    .drawer.show{right:0}
+    .drawer-header{padding:16px;border-bottom:1px solid rgba(148,163,184,.2);display:flex;align-items:center;justify-content:space-between}
+    .drawer-body{padding:16px;overflow:auto;flex:1}
+    .drawer-footer{padding:16px;border-top:1px solid rgba(148,163,184,.2)}
+    .yt{aspect-ratio:16/9;width:100%;border:0;border-radius:12px}
+    .cookie{position:fixed;bottom:16px;right:16px;max-width:440px}
+    .tag{font-size:12px;padding:3px 8px;border-radius:8px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.25)}
+    .danger{color:#fecaca}
+    .success{color:#bbf7d0}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:10px;border-bottom:1px solid rgba(148,163,184,.15);text-align:left}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr 1fr}
+      .drawer{width:92vw}
+    }
+    @media (max-width:640px){
+      .grid-3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand" id="brand" data-action="nav-logo">
+        <div class="logo"><span>🧁</span></div>
+        <div>Cupcake Co</div>
+        <span class="pill">Demo site</span>
+      </div>
+      <nav class="navlinks" aria-label="Primary">
+        <a href="#home" data-action="nav">Home (section)</a>
+        <a href="menu.html" data-action="nav">Shop (menu.html)</a>
+        <a href="story.html" data-action="nav">Story (story.html)</a>
+        <a href="#build" data-action="nav">Build-a-Box</a>
+        <a href="#locations" data-action="nav">Locations</a>
+        <a href="#contact" data-action="nav">Contact</a>
+        <a href="https://instagram.com/" target="_blank" rel="noopener" data-action="outbound-instagram">Instagram ↗</a>
+        <a href="tel:+611300555010" data-action="phone">Call us</a>
+      </nav>
+      <div class="nav-ctas">
+        <a class="btn btn-ghost" href="?q=" id="searchLink" data-action="site-search-link">Search</a>
+        <button class="btn btn-primary" id="openCart" aria-controls="cartDrawer" data-action="open-cart">Cart · <span class="cart-count" id="cartCount">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO / PROMO (Element Visibility test) -->
+    <section id="home" class="hero">
+      <!-- New Banner #1: Free shipping -->
+      <div class="card p24 banner" id="freeShipBanner" data-action="visibility-free-ship">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><strong>Free delivery on orders over $50</strong> · Use code <code>FREESHIP</code></div>
+          <a class="btn btn-primary" href="menu.html" data-action="cta-freeship">Shop now</a>
+        </div>
+      </div>
+      <div class="card p24 banner" id="promoBanner" data-action="visibility-promo">
+        <div class="stack-xl">
+          <div class="row"><span class="pill">New</span> <span class="muted">Element visibility target</span></div>
+          <h1 style="margin:0">Spring Special: <span style="color:var(--brand)">6 for $20</span></h1>
+          <p class="muted">Scroll, click, watch, search, download, and order! This site is loaded with interactions to practice GTM & GA4 — without including any GTM code.</p>
+          <div class="row">
+            <a class="btn btn-primary" href="#menu" data-action="cta-hero">Shop Cupcakes</a>
+            <a class="btn btn-ghost" href="#video" data-action="cta-video">Watch how we bake</a>
+            <a class="btn btn-ghost" href="/assets/CupcakeMenu.pdf" download data-action="download-menu">Download Menu (PDF)</a>
+            <a class="btn btn-ghost" href="/assets/nutrition.csv" download data-action="download-nutrition">Nutrition (CSV)</a>
+          </div>
+        </div>
+      </div>
+      <div class="card p24">
+        <div class="stack">
+          <form id="siteSearch" class="row" method="get" action="">
+            <label class="sr-only" for="q">Search our menu</label>
+            <input name="q" id="q" placeholder="Search cupcakes (e.g. chocolate)" />
+            <button class="btn btn-primary" type="submit" data-action="search-submit">Search</button>
+            <span class="muted">(Site search parameter is <code>q</code>)</span>
+          </form>
+          <div class="muted">Tip: GA4's enhanced measurement can auto-capture <em>file_download</em>, <em>outbound_click</em>, <em>scroll</em>, and YouTube video events.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENU / PRODUCTS (Click & E‑commerce DOM scraping) -->
+    <section id="menu">
+      <!-- New Banner #2: Menu Promo (Element Visibility) -->
+      <div class="card p24 banner" id="menuBanner" data-action="visibility-menu-banner">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><strong>Today Only:</strong> Buy 3 get 1 free on classics.</div>
+          <a class="btn btn-ghost" href="story.html#about" data-action="cta-learn-more">Learn more</a>
+        </div>
+      </div>
+      <div class="stack-xl">
+        <h2>Menu</h2>
+        <div class="grid grid-3" id="productGrid">
+          <!-- Products are injected by JS so we can set data-* attributes cleanly -->
+        </div>
+      </div>
+    </section>
+
+    <!-- BUILD A BOX (Inputs, change events) -->
+    <section id="build">
+      <div class="card p24">
+        <h2>Build-a-Box</h2>
+        <p class="muted">Choose 6 cupcakes. Use change events & button clicks for tracking.</p>
+        <form id="boxForm" class="grid grid-3">
+          <!-- Options injected via JS -->
+        </form>
+        <div class="row" style="margin-top:12px">
+          <button class="btn btn-primary" id="addBox" data-action="add-box">Add Box to Cart</button>
+          <button class="btn btn-ghost" id="resetBox" data-action="reset-box">Reset</button>
+        </div>
+        <p id="boxHint" class="muted" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- LOCATIONS (Outbound, click-to-call, element visibility on map) -->
+    <section id="locations">
+      <div class="grid grid-2">
+        <div class="card p24">
+          <h2>Visit us</h2>
+          <p>123 Sweet St, South Melbourne VIC</p>
+          <p><a href="tel:+611300555010" data-action="phone">☎ Call: 1300 555 010</a></p>
+          <p><a href="mailto:hello@cupcakeco.demo" data-action="email">✉ Email: hello@cupcakeco.demo</a></p>
+          <p><a href="https://maps.google.com/?q=Cupcake%20Co%20South%20Melbourne" target="_blank" rel="noopener" data-action="outbound-maps">Open in Google Maps ↗</a></p>
+          <p>Custom link example: <button class="btn btn-ghost" id="customLink" data-action="custom-link">Special Offer Link (not an <code>&lt;a&gt;</code>)</button></p>
+        </div>
+        <div class="card p24 banner" id="mapBanner">
+          <p class="muted">Element Visibility target: <strong>#mapBanner</strong></p>
+          <div style="height:220px;border-radius:12px;background:linear-gradient(135deg,#1f2937,#0b1220);display:flex;align-items:center;justify-content:center">🗺️ Map placeholder</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT (Long content for Scroll Depth) -->
+    <section id="about">
+      <div class="card p24">
+        <h2>Our Story</h2>
+        <div id="longText" class="stack">
+          <p class="muted">This long section lets you test scroll depth triggers. Keep scrolling…</p>
+          <p>We started Cupcake Co with two ovens and a dream. Now we bake hundreds of cupcakes daily, from classic Vanilla Bean to daring Salted Caramel Popcorn. Our philosophy is simple: quality ingredients, small batches, big smiles.</p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent bibendum, tortor sed fermentum maximus, nibh orci euismod neque, in ultricies velit erat vitae arcu. Suspendisse potenti. Donec vitae congue velit. Pellentesque non lacinia mi. Curabitur malesuada dictum eros, a vulputate nibh sagittis non. Integer ullamcorper, mi id efficitur porta, felis nunc commodo nisl, at interdum ipsum sem id eros.</p>
+          <p>Morbi gravida, nunc vitae convallis luctus, mauris nunc dignissim orci, ut egestas purus mi ac lectus. Sed id sagittis enim. Cras eu pulvinar nulla. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer dictum nisl vel ligula gravida, a egestas velit tincidunt. Sed tempor eros justo, id elementum nisl porta vitae.</p>
+          <p>Sed posuere, leo id luctus vestibulum, ipsum lectus ultricies nisl, sit amet dictum est nulla id turpis. Nulla facilisi. Donec varius sem ac nulla bibendum, sit amet accumsan mauris condimentum. Vivamus dictum lectus vitae enim efficitur, id vulputate augue efficitur. Donec convallis lorem quis porttitor pretium. Sed sit amet sem non arcu accumsan lobortis vitae ac est.</p>
+          <p>Keep going! This text is intentionally long for scroll testing. Repeat: cupcakes cupcakes cupcakes. 🍰🧁🍫</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEO (YouTube tracking) -->
+    <section id="video">
+      <div class="card p24">
+        <h2>Behind the Scenes</h2>
+        <p class="muted">YouTube embed with <code>enablejsapi=1</code> for GTM's YouTube Video trigger.</p>
+        <iframe class="yt" id="ytVideo" title="Cupcake Co – Behind the Scenes" src="https://www.youtube.com/embed/Ffqe3GnNJhc?enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+    </section>
+
+    <!-- CONTACT / ORDER (Forms) -->
+    <section id="contact">
+      <div class="grid grid-2">
+        <div class="card p24">
+          <h2>Newsletter</h2>
+          <p class="muted">Form submission trigger practice (submits to same page).</p>
+          <form id="newsletterForm" action="" method="post">
+            <div class="stack-lg">
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required placeholder="you@example.com" />
+              </div>
+              <div class="field">
+                <label for="pref">Favourite flavour</label>
+                <select id="pref" name="preference">
+                  <option value="vanilla">Vanilla</option>
+                  <option value="chocolate">Chocolate</option>
+                  <option value="red-velvet">Red Velvet</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" type="submit" data-action="newsletter-submit">Subscribe</button>
+            </div>
+          </form>
+        </div>
+        <div class="card p24">
+          <h2>Event Catering</h2>
+          <p class="muted">Another form with radios/checkboxes.</p>
+          <form id="cateringForm" action="" method="post">
+            <div class="stack-lg">
+              <div class="field">
+                <label>Event type</label>
+                <div class="row">
+                  <label><input type="radio" name="event_type" value="wedding" /> Wedding</label>
+                  <label><input type="radio" name="event_type" value="birthday" /> Birthday</label>
+                  <label><input type="radio" name="event_type" value="corporate" /> Corporate</label>
+                </div>
+              </div>
+              <div class="field">
+                <label><input type="checkbox" name="gluten_free" value="1" /> Gluten-free options</label>
+              </div>
+              <div class="field">
+                <label for="guests">Guests</label>
+                <input id="guests" name="guests" type="number" min="10" max="300" placeholder="50" />
+              </div>
+              <button class="btn btn-primary" type="submit" data-action="catering-submit">Request quote</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- CART DRAWER (Click tracking, DOM scraping) -->
+    <aside class="drawer" id="cartDrawer" aria-hidden="true" aria-label="Shopping cart">
+      <div class="drawer-header">
+        <strong>Your Cart</strong>
+        <button class="btn btn-ghost" id="closeCart" data-action="close-cart">Close</button>
+      </div>
+      <div class="drawer-body">
+        <div id="cartItems" class="stack"></div>
+      </div>
+      <div class="drawer-footer">
+        <div class="row" style="justify-content:space-between">
+          <div>Total: <strong id="cartTotal">$0.00</strong></div>
+          <button class="btn btn-primary" id="checkout" data-action="checkout">Checkout</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CHECKOUT MODAL (multi-step with History changes) -->
+    <dialog id="checkoutModal" class="card" style="width:min(720px,96vw);">
+      <form method="dialog" id="checkoutForm">
+        <div class="p24 stack-xl">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <strong>Checkout</strong>
+            <button class="btn btn-ghost" value="close" data-action="close-checkout">Close</button>
+          </div>
+          <ol class="muted" style="display:flex;gap:10px;flex-wrap:wrap">
+            <li class="tag" id="step1Tag">1 · Shipping</li>
+            <li class="tag" id="step2Tag">2 · Payment</li>
+            <li class="tag" id="step3Tag">3 · Review</li>
+          </ol>
+          <div id="checkoutSteps" class="stack-xl">
+            <section id="step1" class="stack-lg">
+              <div class="grid grid-2">
+                <div class="field"><label for="fname">First name</label><input id="fname" required /></div>
+                <div class="field"><label for="lname">Last name</label><input id="lname" required /></div>
+              </div>
+              <div class="field"><label for="addr">Address</label><input id="addr" required /></div>
+              <div class="grid grid-3">
+                <div class="field"><label for="city">City</label><input id="city" required /></div>
+                <div class="field"><label for="state">State</label><input id="state" required /></div>
+                <div class="field"><label for="zip">Postcode</label><input id="zip" required /></div>
+              </div>
+              <div class="row">
+                <button class="btn btn-primary" id="toPayment" data-action="to-payment">Continue to payment</button>
+              </div>
+            </section>
+            <section id="step2" class="stack-lg" hidden>
+              <div class="grid grid-2">
+                <div class="field"><label for="card">Card number</label><input id="card" inputmode="numeric" placeholder="4242 4242 4242 4242" required /></div>
+                <div class="field"><label for="exp">Expiry</label><input id="exp" placeholder="MM/YY" required /></div>
+              </div>
+              <div class="grid grid-2">
+                <div class="field"><label for="nameoncard">Name on card</label><input id="nameoncard" required /></div>
+                <div class="field"><label for="cvv">CVV</label><input id="cvv" inputmode="numeric" required /></div>
+              </div>
+              <div class="row">
+                <button class="btn btn-ghost" id="backToShipping" data-action="back-shipping">Back</button>
+                <button class="btn btn-primary" id="toReview" data-action="to-review">Review order</button>
+              </div>
+            </section>
+            <section id="step3" class="stack-lg" hidden>
+              <p class="muted">Review your order and place it.</p>
+              <table class="table" id="reviewTable"></table>
+              <div class="row">
+                <button class="btn btn-ghost" id="backToPayment" data-action="back-payment">Back</button>
+                <button class="btn btn-primary" id="placeOrder" data-action="place-order">Place order</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- COOKIE BANNER (consent-like clicks) -->
+    <div class="card p24 cookie" id="cookie" role="dialog" aria-live="polite" aria-label="Cookie consent">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <strong>Cookies?</strong>
+          <div class="muted">We use crumbs to improve your cupcake journey.</div>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost" id="declineCookies" data-action="cookies-decline">Decline</button>
+          <button class="btn btn-primary" id="acceptCookies" data-action="cookies-accept">Accept</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBUG AREA (JS Error trigger) -->
+    <section id="debug">
+      <div class="card p24">
+        <h2>Debug Playground</h2>
+        <div class="row">
+          <button class="btn btn-ghost danger" id="throwError" data-action="throw-error">Simulate JS Error</button>
+          <button class="btn btn-ghost success" id="clearCart" data-action="clear-cart">Clear Cart</button>
+        </div>
+        <p class="muted">Use GTM's <em>JavaScript Error</em> trigger. The error button throws an exception.
+        You can also set up a <em>Timer</em> trigger in GTM (no code needed) to fire after e.g. 10 seconds on a page.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container row" style="justify-content:space-between">
+      <div>© <span id="year"></span> Cupcake Co</div>
+      <div class="row">
+        <a href="/privacy.html" data-action="footer-privacy">Privacy</a>
+        <span class="muted">·</span>
+        <a href="/terms.html" data-action="footer-terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- No GTM / GA code included on purpose -->
+  <script>
+    // ---------- Utilities ----------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const format = n => `$${n.toFixed(2)}`;
+    const state = {
+      cart: [], // {id,name,price,qty}
+      products: [
+        {id:"vanilla", name:"Vanilla Bean", price:3.50, emoji:"🧁", badge:"Best Seller"},
+        {id:"choc", name:"Chocolate Fudge", price:3.80, emoji:"🍫"},
+        {id:"red", name:"Red Velvet", price:3.80, emoji:"❤️"},
+        {id:"salt", name:"Salted Caramel", price:3.90, emoji:"🧂"},
+        {id:"lemon", name:"Lemon Zest", price:3.60, emoji:"🍋"},
+        {id:"pb", name:"Peanut Butter", price:3.90, emoji:"🥜"},
+      ],
+    };
+
+    function save(){ localStorage.setItem('cupcake-cart', JSON.stringify(state.cart)); }
+    function load(){ try{ state.cart = JSON.parse(localStorage.getItem('cupcake-cart')||'[]'); }catch(e){ state.cart = []; } }
+
+    // ---------- Render products ----------
+    function renderProducts(){
+      const grid = $('#productGrid');
+      grid.innerHTML = '';
+      for(const p of state.products){
+        const card = document.createElement('div');
+        card.className = 'card p24 product';
+        card.setAttribute('data-sku', p.id);
+        card.setAttribute('data-name', p.name);
+        card.setAttribute('data-category', 'Cupcake');
+        card.setAttribute('data-price', p.price);
+        card.innerHTML = `
+          <span class="badge pill">${p.badge || 'Cupcake'}</span>
+          <div class="img">${p.emoji}</div>
+          <h3 style="margin:10px 0 0">${p.name}</h3>
+          <div class="muted">Classic ${p.name.toLowerCase()} cupcake.</div>
+          <div class="row" style="justify-content:space-between;margin-top:10px">
+            <span class="price">${format(p.price)}</span>
+            <button class="btn btn-primary addToCart" data-action="add-to-cart">Add to cart</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // ---------- Search (site search param q) ----------
+    function applySearchFromURL(){
+      const params = new URLSearchParams(location.search);
+      const q = params.get('q');
+      if(!q) return;
+      $('#q').value = q;
+      const cards = $$('#productGrid .product');
+      for(const c of cards){
+        const name = c.getAttribute('data-name').toLowerCase();
+        c.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
+      }
+    }
+
+    // ---------- Cart ----------
+    function addToCart(id, qty=1){
+      const p = state.products.find(x=>x.id===id);
+      if(!p) return;
+      const found = state.cart.find(x=>x.id===id);
+      if(found) found.qty += qty; else state.cart.push({id:p.id,name:p.name,price:p.price,qty});
+      updateCartUI(); save();
+    }
+    function removeFromCart(id){ state.cart = state.cart.filter(x=>x.id!==id); updateCartUI(); save(); }
+    function setQty(id, qty){ const item = state.cart.find(x=>x.id===id); if(item){ item.qty = Math.max(1, qty|0); updateCartUI(); save(); } }
+    function cartTotal(){ return state.cart.reduce((s,x)=>s+x.price*x.qty,0); }
+
+    function updateCartUI(){
+      $('#cartCount').textContent = state.cart.reduce((s,x)=>s+x.qty,0);
+      const list = $('#cartItems');
+      list.innerHTML = '';
+      if(state.cart.length===0){ list.innerHTML = '<p class="muted">Your cart is empty.</p>'; }
+      for(const item of state.cart){
+        const row = document.createElement('div');
+        row.className = 'card p24';
+        row.setAttribute('data-sku', item.id);
+        row.innerHTML = `
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div><strong>${item.name}</strong> <span class="muted">· ${format(item.price)}</span></div>
+            <div class="row">
+              <label class="sr-only" for="qty-${item.id}">Qty</label>
+              <input id="qty-${item.id}" type="number" min="1" value="${item.qty}" style="width:70px" data-action="qty-change" />
+              <button class="btn btn-ghost" data-action="remove-item">Remove</button>
+            </div>
+          </div>`;
+        list.appendChild(row);
+      }
+      $('#cartTotal').textContent = format(cartTotal());
+      renderReviewTable();
+    }
+
+    // ---------- Build-a-Box ----------
+    function renderBoxOptions(){
+      const form = $('#boxForm');
+      form.innerHTML = '';
+      for(const p of state.products){
+        const id = 'box-' + p.id;
+        const wrap = document.createElement('label');
+        wrap.className = 'card p24 row';
+        wrap.innerHTML = `
+          <input type="checkbox" id="${id}" name="box" value="${p.id}" data-name="${p.name}" data-price="${p.price}" />
+          <span style="flex:1 1 auto">${p.emoji} ${p.name}</span>
+          <span class="muted">${format(p.price)}</span>
+        `;
+        form.appendChild(wrap);
+      }
+      updateBoxHint();
+    }
+    function updateBoxHint(){
+      const sel = $$('#boxForm input[type="checkbox"]:checked');
+      $('#boxHint').textContent = `${sel.length}/6 selected`;
+    }
+
+    // ---------- Review Table ----------
+    function renderReviewTable(){
+      const t = $('#reviewTable');
+      t.innerHTML = '';
+      if(state.cart.length===0){ t.innerHTML = '<tr><td class="muted">No items</td></tr>'; return; }
+      const head = document.createElement('tr');
+      head.innerHTML = '<th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th>';
+      t.appendChild(head);
+      for(const it of state.cart){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${it.name}</td><td>${it.qty}</td><td>${format(it.price)}</td><td>${format(it.price*it.qty)}</td>`;
+        t.appendChild(tr);
+      }
+      const total = document.createElement('tr');
+      total.innerHTML = `<td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>${format(cartTotal())}</strong></td>`;
+      t.appendChild(total);
+    }
+
+    // ---------- Checkout flow (with history changes) ----------
+    function openCheckout(){
+      const dlg = $('#checkoutModal');
+      if(typeof dlg.showModal === 'function'){ dlg.showModal(); } else { dlg.setAttribute('open',''); }
+      goStep(1);
+      history.pushState({step:1}, '', '#checkout-step-1');
+    }
+    function goStep(n){
+      $('#step1').hidden = n!==1; $('#step2').hidden = n!==2; $('#step3').hidden = n!==3;
+      $('#step1Tag').style.background = n===1 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+      $('#step2Tag').style.background = n===2 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+      $('#step3Tag').style.background = n===3 ? 'rgba(34,197,94,.2)' : 'rgba(148,163,184,.15)';
+    }
+
+    // ---------- Event binding ----------
+    function bind(){
+      // Nav to sections
+      $$('.navlinks a[href^="#"]').forEach(a=>a.addEventListener('click', e=>{
+        // History change trigger can detect this
+      }));
+
+      // Search form (GET q=)
+      $('#siteSearch').addEventListener('submit', ()=>{/* default navigate to ?q=... */});
+
+      // Products
+      $('#productGrid').addEventListener('click', e=>{
+        const btn = e.target.closest('.addToCart');
+        if(!btn) return;
+        const card = e.target.closest('.product');
+        addToCart(card.getAttribute('data-sku'));
+      });
+
+      // Build-a-Box selections
+      $('#boxForm').addEventListener('change', updateBoxHint);
+      $('#addBox').addEventListener('click', ()=>{
+        const sel = $$('#boxForm input[type="checkbox"]:checked');
+        sel.forEach(chk=> addToCart(chk.value));
+      });
+      $('#resetBox').addEventListener('click', ()=>{
+        $$('#boxForm input[type="checkbox"]').forEach(c=>c.checked=false); updateBoxHint();
+      });
+
+      // Cart drawer
+      $('#openCart').addEventListener('click', ()=>$('#cartDrawer').classList.add('show'));
+      $('#closeCart').addEventListener('click', ()=>$('#cartDrawer').classList.remove('show'));
+      $('#cartItems').addEventListener('click', e=>{
+        const row = e.target.closest('.card'); if(!row) return;
+        if(e.target.matches('[data-action="remove-item"]')) removeFromCart(row.getAttribute('data-sku'));
+      });
+      $('#cartItems').addEventListener('change', e=>{
+        if(e.target.matches('[data-action="qty-change"]')){
+          const row = e.target.closest('.card'); setQty(row.getAttribute('data-sku'), +e.target.value);
+        }
+      });
+
+      // Checkout modal
+      $('#checkout').addEventListener('click', openCheckout);
+      $('#toPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); });
+      $('#backToShipping').addEventListener('click', e=>{ e.preventDefault(); goStep(1); history.pushState({step:1}, '', '#checkout-step-1'); });
+      $('#toReview').addEventListener('click', e=>{ e.preventDefault(); goStep(3); history.pushState({step:3}, '', '#checkout-step-3'); });
+      $('#backToPayment').addEventListener('click', e=>{ e.preventDefault(); goStep(2); history.pushState({step:2}, '', '#checkout-step-2'); });
+      $('#placeOrder').addEventListener('click', e=>{
+        e.preventDefault();
+        // Fake order success
+        state.cart = []; save(); updateCartUI();
+        const dlg = $('#checkoutModal');
+        if(typeof dlg.close === 'function'){ dlg.close(); } else { dlg.removeAttribute('open'); }
+        alert('Order placed! (Demo)');
+        history.pushState({step:4}, '', '#order-success');
+      });
+
+      // Cookie banner
+      $('#acceptCookies').addEventListener('click', ()=> $('#cookie').remove());
+      $('#declineCookies').addEventListener('click', ()=> $('#cookie').remove());
+
+      // Custom link (not an <a>)
+      $('#customLink').addEventListener('click', ()=> alert('Custom link clicked'));
+
+      // JS Error button
+      $('#throwError').addEventListener('click', ()=>{
+        // Intentionally throw to test GTM JavaScript Error trigger
+        nonexistentFunction();
+      });
+
+      // Clear cart (for repeated testing)
+      $('#clearCart').addEventListener('click', ()=>{ state.cart = []; save(); updateCartUI(); });
+
+      // Open cart via keyboard shortcut (for fun): press "c"
+      document.addEventListener('keydown', (e)=>{ if(e.key==='c') $('#cartDrawer').classList.add('show'); });
+
+      // Close cart when clicking outside
+      document.addEventListener('click', (e)=>{ if(e.target.id==='cartDrawer') $('#cartDrawer').classList.remove('show'); });
+
+      // Hash-based router (History Change trigger)
+      window.addEventListener('hashchange', ()=>{/* GTM can listen via History Change trigger */});
+    }
+
+    // ---------- Init ----------
+    function init(){
+      $('#year').textContent = new Date().getFullYear();
+      load();
+      renderProducts();
+      renderBoxOptions();
+      updateCartUI();
+      applySearchFromURL();
+      bind();
+      // If the page loads with a specific #checkout-step-x, open modal
+      if(location.hash.startsWith('#checkout-step')) openCheckout();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+  
+  <!-- ===========================
+       EXTRA PAGES (copy into files)
+       =========================== -->
+  
+  <!-- ===== COPY INTO: menu.html ===== -->
+  <!--
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cupcake Co · Menu</title>
+    <link rel="icon" href="data:,">
+    <style>
+      body{margin:0;font-family:ui-sans-serif,system-ui;background:#0f172a;color:#e5e7eb}
+      .container{max-width:1050px;margin:auto;padding:20px}
+      .nav{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(148,163,184,.2)}
+      a{color:#f59e0b;text-decoration:none}
+      a:hover{text-decoration:underline}
+      .card{background:#111827;border:1px solid rgba(148,163,184,.12);border-radius:18px;padding:18px;margin:12px 0}
+      .banner{position:relative;overflow:hidden}
+      .grid{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+      @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+      @media(max-width:640px){.grid{grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div><a href="index.html">← Home</a></div>
+        <nav>
+          <a href="menu.html">Menu</a>
+          <a href="story.html">Story</a>
+          <a href="index.html#contact">Contact</a>
+        </nav>
+      </div>
+
+      <div class="card banner" id="menuTopBanner">
+        <strong>Menu Page Banner:</strong> Free mini cupcake with every box today!
+      </div>
+
+      <h1>Menu</h1>
+      <p class="card">Practice real pageviews: this is a separate HTML file. Track outbound clicks, downloads, and product interactions here too.</p>
+
+      <div class="grid" id="menuGrid">
+        <div class="card" data-sku="vanilla" data-name="Vanilla Bean" data-category="Cupcake" data-price="3.50">
+          <strong>🧁 Vanilla Bean</strong><br/>$3.50<br/>
+          <button data-action="add-to-cart">Add to cart</button>
+        </div>
+        <div class="card" data-sku="choc" data-name="Chocolate Fudge" data-category="Cupcake" data-price="3.80">
+          <strong>🍫 Chocolate Fudge</strong><br/>$3.80<br/>
+          <button data-action="add-to-cart">Add to cart</button>
+        </div>
+        <div class="card" data-sku="red" data-name="Red Velvet" data-category="Cupcake" data-price="3.80">
+          <strong>❤️ Red Velvet</strong><br/>$3.80<br/>
+          <button data-action="add-to-cart">Add to cart</button>
+        </div>
+      </div>
+
+      <p class="card"><a href="/assets/CupcakeMenu.pdf" download data-action="download-menu">Download Full Menu (PDF)</a></p>
+
+      <p class="card">Need stories? Visit our <a href="story.html#about">About page</a>.</p>
+    </div>
+    <!-- No GTM/GA snippets here either -->
+    <script>
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-action="add-to-cart"]');
+        if(!btn) return;
+        const card = btn.closest('[data-sku]');
+        alert('Added to cart: '+card.getAttribute('data-name')+' (demo)');
+      });
+    </script>
+  </body>
+  </html>
+  -->
+
+  <!-- ===== COPY INTO: story.html ===== -->
+  <!--
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cupcake Co · Our Story</title>
+    <style>
+      body{margin:0;font-family:ui-sans-serif,system-ui;background:#0f172a;color:#e5e7eb}
+      .container{max-width:850px;margin:auto;padding:20px}
+      a{color:#f59e0b;text-decoration:none}
+      a:hover{text-decoration:underline}
+      .card{background:#111827;border:1px solid rgba(148,163,184,.12);border-radius:18px;padding:18px;margin:12px 0}
+      .banner{position:relative;overflow:hidden}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <p><a href="index.html">← Home</a> · <a href="menu.html">Menu</a></p>
+
+      <div class="card banner" id="storyBanner">
+        <strong>Story Page Banner:</strong> Join the Cupcake Club for 10% off.
+      </div>
+
+      <h1 id="about">Our Story</h1>
+      <div class="card">
+        <p>We bake small-batch cupcakes in South Melbourne. This standalone page lets you practice page navigation, scroll tracking, and element visibility on a different HTML file.</p>
+        <p>Try a <a href="https://maps.google.com/?q=Cupcake%20Co%20South%20Melbourne" target="_blank" rel="noopener">Maps outbound link</a> or a <a href="mailto:hello@cupcakeco.demo">mailto link</a>.</p>
+      </div>
+
+      <h2>FAQ</h2>
+      <details class="card"><summary>Do you cater events?</summary>Yes! See the <a href="index.html#contact">Event Catering form</a>.</details>
+      <details class="card"><summary>Allergens?</summary>Gluten-free and nut-free options available.</details>
+    </div>
+    <!-- No GTM/GA snippets here either -->
+  </body>
+  </html>
+  -->
+
+</html>
